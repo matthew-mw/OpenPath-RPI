@@ -58,20 +58,14 @@ for path in paths:
         if destination not in landmarksData["Name"].values:
             continue
         
-        # print(f"Shortest path from {origin} to {destination}: {path}")
+        print(f"Shortest path from {origin} to {destination}: {path}")
         landmark_hits[origin] = landmark_hits.get(origin, 0) + 1
-                
-# print("\nLandmark hits:")
-for landmark, hits in landmark_hits.items():
-    # print(f"{landmark}: {hits} hits")
-    pass
-    
-
+                    
 # Verify that the facts the network spat out makes sense.
 
 try:
     assert min(landmark_hits.values()) > 0, "No landmarks were hit in the paths. Check the graph and data."
-    assert max(landmark_hits.values()) < len(landmarksData), "Some landmarks were hit too many times. Check the graph and data."
+    assert all(hits == len(landmarksData) for hits in landmark_hits.values()), "Each landmark must reach every landmark, including itself. Check the graph and data."
     assert len(landmark_hits) == len(landmarksData), "Not all landmarks were hit in the paths. Check the graph and data."
     assert min(landmark_hits.values()) == max(landmark_hits.values()), "Landmarks were hit an unequal number of times. Check the graph and data."
 except AssertionError as e:
