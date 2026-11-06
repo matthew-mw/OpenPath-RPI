@@ -1,33 +1,35 @@
-import networkx as nx
-import pandas as pd
 import json
 
+import networkx as nx
+
 try:
-    with open("../../data/locations.json", "r") as f:
+    with open("../../data/locations.json") as f:
         locations = json.load(f)
 except FileNotFoundError:
     print("Location data file not found.")
     locations = {}
-    
+
 try:
-    with open("../../data/paths.json", "r") as f:
+    with open("../../data/paths.json") as f:
         paths = json.load(f)
 except FileNotFoundError:
     print("Path data file not found.")
     paths = {}
+
 
 class Node:
     def __init__(self, name: str, latitude: float, longitude: float):
         self.name = name
         self.latitude = latitude
         self.longitude = longitude
-        
+
     # Should be close enough that the curvature of the earth doesn't matter for our purposes
     # Should add more filters in later weeks (i.e. accessibility, stairs, ramps, etc.)
     def dist(self, other: "Node") -> float:
         return (
             (self.latitude - other.latitude) ** 2 + (self.longitude - other.longitude) ** 2
         ) ** 0.5
+
 
 # Create a networkx graph
 G = nx.Graph()
@@ -42,28 +44,28 @@ for _, location_data in locations.items():
     # We will use this to differentiate between the two.
     if "name" in location_data:
         name = location_data["name"]
-        
+
         location_id = location_data["id"]
         endpoints[location_id] = name
         lat, lon = location_data["coordinates"]
         node = Node(location_id, lat, lon)
         nodes[location_id] = node
         G.add_node(node, weight=0, size=0, pos=(lat, lon))
-        
+
         for entrance in location_data["entrances"]:
             entrance_id = entrance["id"]
             lat, lon = entrance["coordinates"]
-            
+
             node = Node(entrance_id, lat, lon)
-            
+
             nodes[entrance_id] = node
             G.add_node(node, weight=0, size=0, pos=(lat, lon))
     else:
         node_id = location_data["id"]
         lat, lon = location_data["coordinates"]
-        
+
         node = Node(node_id, lat, lon)
-        
+
         nodes[node_id] = node
         G.add_node(node, weight=0, size=0, pos=(lat, lon))
 
@@ -79,14 +81,12 @@ paths = dict(nx.all_pairs_dijkstra_path(G, weight="weight"))
 landmark_hits = {}
 
 for origin, destinations in paths.items():
-
     origin_id = origin.name
 
     if origin_id not in endpoints:
         continue
 
     for destination, path in destinations.items():
-
         destination_id = destination.name
 
         if origin_id == destination_id:
@@ -105,9 +105,7 @@ for origin, destinations in paths.items():
             f"{[node.name for node in path]}"
         )
 
-        landmark_hits[origin_id] = (
-            landmark_hits.get(origin_id, 0) + 1
-        )
+        landmark_hits[origin_id] = landmark_hits.get(origin_id, 0) + 1
 
 print("\nLandmark hits:")
 for landmark, hits in landmark_hits.items():
